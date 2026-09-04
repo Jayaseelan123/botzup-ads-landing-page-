@@ -604,44 +604,51 @@
 
 
         <!-- 10. CONTACT SECTION -->
-        <section id="contact" class="contact-section">
+        <section id="contact" class="contact-section" style="background-color: var(--bg-light); padding: 5rem 0;">
             <div class="container contact-container" style="justify-content: center; text-align: center;">
-                <div class="contact-content" style="max-width: 800px; width: 100%;">
-                    <h2 class="section-title" style="margin-bottom: 1.5rem;">Get In Touch</h2>
-                    <p style="margin-bottom: 3rem;">Have questions about Botzup Automation? Our team is here to help you
-                        automate your WhatsApp sales and support.</p>
-                    <div class="contact-info"
-                        style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 3rem; width: 100%;">
-                        <div class="contact-info-item"
-                            style="display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; min-width: 200px;">
-                            <i class="fa-solid fa-envelope"
-                                style="margin-bottom: 1rem; font-size: 2.5rem; color: var(--primary-color);"></i>
-                            <div>
-                                <h4 style="margin-bottom: 0.5rem;">Email Us</h4>
-                                <p style="margin: 0; color: var(--text-light);">botzupautomation@gmail.com</p>
+                <div class="contact-content" style="max-width: 900px; width: 100%; margin: 0 auto;">
+                    <h2 class="section-title" style="margin-bottom: 1rem;">Get In Touch</h2>
+                    <p style="margin-bottom: 4rem; color: var(--text-light); font-size: 1.1rem;">Have questions about Botzup Automation? Our team is here to help you automate your WhatsApp sales and support.</p>
+                    
+                    <div class="contact-info" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; width: 100%;">
+                        
+                        <!-- Email Card -->
+                        <div class="contact-info-item" style="background: white; padding: 2.5rem 1.5rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 70px; height: 70px; background: rgba(13, 110, 253, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                                <i class="fa-solid fa-envelope" style="font-size: 2rem; color: var(--primary-color);"></i>
                             </div>
+                            <h4 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">Email Us</h4>
+                            <p style="margin: 0; color: var(--text-light); font-size: 1rem;">botzupautomation@gmail.com</p>
                         </div>
-                        <div class="contact-info-item"
-                            style="display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; min-width: 200px;">
-                            <i class="fa-solid fa-phone"
-                                style="margin-bottom: 1rem; font-size: 2.5rem; color: var(--primary-color);"></i>
-                            <div>
-                                <h4 style="margin-bottom: 0.5rem;">Call Us</h4>
-                                <p style="margin: 0; color: var(--text-light);">+91 97503 59750<br>+91 99943 53720</p>
+
+                        <!-- Phone Card -->
+                        <div class="contact-info-item" style="background: white; padding: 2.5rem 1.5rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 70px; height: 70px; background: rgba(13, 110, 253, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                                <i class="fa-solid fa-phone" style="font-size: 2rem; color: var(--primary-color);"></i>
                             </div>
+                            <h4 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">Call Us</h4>
+                            <p style="margin: 0; color: var(--text-light); font-size: 1rem; line-height: 1.6;">+91 97503 59750<br>+91 99943 53720</p>
                         </div>
-                        <div class="contact-info-item"
-                            style="display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; min-width: 200px;">
-                            <i class="fa-solid fa-location-dot"
-                                style="margin-bottom: 1rem; font-size: 2.5rem; color: var(--primary-color);"></i>
-                            <div>
-                                <h4 style="margin-bottom: 0.5rem;">Visit Us</h4>
-                                <p style="margin: 0; color: var(--text-light);">Krishnagiri, Tamilnadu</p>
+
+                        <!-- Location Card -->
+                        <div class="contact-info-item" style="background: white; padding: 2.5rem 1.5rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 70px; height: 70px; background: rgba(13, 110, 253, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                                <i class="fa-solid fa-location-dot" style="font-size: 2rem; color: var(--primary-color);"></i>
                             </div>
+                            <h4 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">Visit Us</h4>
+                            <p style="margin: 0; color: var(--text-light); font-size: 1rem;">Krishnagiri, Tamilnadu</p>
                         </div>
+
                     </div>
                 </div>
             </div>
+            
+            <style>
+                .contact-info-item:hover {
+                    transform: translateY(-5px);
+                    box-shadow: var(--shadow-md) !important;
+                }
+            </style>
         </section>
 
     </main>
