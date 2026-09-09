@@ -119,9 +119,9 @@
                         </ul>
                     </div>
                     <div class="overview-visual" style="flex: 1.2; min-width: 400px;">
-                        <div
+                        <div class="about-video-card"
                             style="background: var(--bg-light); padding: 2rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); text-align: center; box-shadow: var(--shadow-sm);">
-                            <div
+                            <div class="about-video-frame"
                                 style="position: relative; width: 100%; height: 700px; margin-bottom: 1.5rem; background-color: #000; border-radius: var(--border-radius); overflow: hidden;">
                                 <video width="100%" height="100%" controls style="object-fit: cover;">
                                     <source src="assets/images/about.mp4" type="video/mp4">
@@ -380,7 +380,7 @@
         <section id="performance" class="performance-section" style="background-color: #f8f9fa; padding: 5rem 0;">
             <div class="container">
                 <div style="text-align: center; margin-bottom: 3rem;">
-                    <h2
+                    <h2 class="perf-section-title"
                         style="color: var(--primary-dark); font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 800; text-transform: uppercase;">
                         Botzup Performance Report</h2>
                     <p style="font-size: 1.25rem; color: var(--text-color);">The numbers behind a month of <strong
@@ -388,12 +388,12 @@
                 </div>
 
                 <!-- Highlight Card -->
-                <div
+                <div class="perf-highlight-card"
                     style="background: white; border-radius: 16px; padding: 3rem; margin-bottom: 3rem; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center;">
                     <div
                         style="background: rgba(13, 110, 253, 0.1); color: var(--primary-color); padding: 0.5rem 1.5rem; border-radius: 20px; font-weight: bold; margin-bottom: 1.5rem; text-transform: uppercase; font-size: 0.9rem;">
                         Highlight of the Month</div>
-                    <h3 style="font-size: 4.5rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--primary-dark);">
+                    <h3 class="perf-highlight-number" style="font-size: 4.5rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--primary-dark);">
                         5,01,500+</h3>
                     <p
                         style="font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; margin-bottom: 1rem; color: var(--text-color);">
@@ -403,13 +403,13 @@
                 </div>
 
                 <!-- Metrics Grid -->
-                <div
+                <div class="perf-metrics-grid"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
-                    <div
+                    <div class="perf-metric-card"
                         style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; align-items: center;">
                         <i class="fa-solid fa-bullhorn"
                             style="font-size: 2.5rem; color: #facc15; margin-bottom: 1.5rem;"></i>
-                        <h4
+                        <h4 class="perf-metric-number"
                             style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">
                             62</h4>
                         <p
@@ -417,11 +417,11 @@
                             Total Campaigns</p>
                         <p style="font-size: 0.8rem; color: var(--text-light);">This Month</p>
                     </div>
-                    <div
+                    <div class="perf-metric-card"
                         style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; align-items: center;">
                         <i class="fa-solid fa-paper-plane"
                             style="font-size: 2.5rem; color: #38bdf8; margin-bottom: 1.5rem;"></i>
-                        <h4
+                        <h4 class="perf-metric-number"
                             style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">
                             5,62,000+</h4>
                         <p
@@ -429,11 +429,11 @@
                             Messages Sent</p>
                         <p style="font-size: 0.8rem; color: var(--text-light);">This Month</p>
                     </div>
-                    <div
+                    <div class="perf-metric-card"
                         style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; align-items: center;">
                         <i class="fa-regular fa-circle-check"
                             style="font-size: 2.5rem; color: #4ade80; margin-bottom: 1.5rem;"></i>
-                        <h4
+                        <h4 class="perf-metric-number"
                             style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">
                             5,01,500+</h4>
                         <p
@@ -441,16 +441,16 @@
                             Messages Delivered</p>
                         <p style="font-size: 0.8rem; color: var(--text-light);">This Month</p>
                     </div>
-                    <div
+                    <div class="perf-metric-card"
                         style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; align-items: center; position: relative;">
-                        <div
+                        <div class="perf-badge"
                             style="position: absolute; top: -15px; background: white; border: 2px solid var(--border-color); color: var(--primary-dark); padding: 0.4rem 1.2rem; border-radius: 30px; font-weight: bold; font-size: 0.95rem; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 8px;">
                             READ RATIO <span style="color: var(--primary-color); font-size: 1.1rem;">89.99% <i
                                     class="fa-solid fa-arrow-trend-up"></i></span>
                         </div>
                         <i class="fa-regular fa-eye"
                             style="font-size: 2.5rem; color: #c084fc; margin-bottom: 1.5rem; margin-top: 1rem;"></i>
-                        <h4
+                        <h4 class="perf-metric-number"
                             style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-dark);">
                             4,51,350+</h4>
                         <p

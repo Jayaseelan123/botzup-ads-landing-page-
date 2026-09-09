@@ -25,11 +25,17 @@
 }
 
 /* 3. Typography */
+html {
+    max-width: 100%;
+}
+
 body {
     font-family: var(--font-family);
     color: var(--text-color);
     line-height: 1.6;
     background-color: var(--bg-color);
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 h1,
@@ -74,6 +80,12 @@ a:hover {
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 20px;
+}
+
+.container-fluid {
+    width: 100%;
+    max-width: 100%;
     padding: 0 20px;
 }
 
@@ -179,7 +191,8 @@ section {
 .logo img {
     height: 70px;
     /* Standard navbar logo height */
-    width: 180px;
+    width: auto;
+    max-width: 180px;
     object-fit: contain;
     /* margin-top: -31px; */
 }
@@ -1206,17 +1219,18 @@ section {
     .logo img {
         height: 55px;
         /* Scaled down for mobile */
+        max-width: 150px;
     }
 
     .header-cta .btn {
-        padding: 0.4rem 1rem;
-        font-size: 1rem;
+        padding: 0.5rem 0.9rem;
+        font-size: 0.9rem;
         line-height: 1.2;
         border-radius: 8px;
-        width: 80px;
-        white-space: normal;
+        width: auto;
+        white-space: nowrap;
         text-align: center;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
     }
@@ -1249,6 +1263,20 @@ section {
     .form-row {
         flex-direction: column;
         gap: 1rem;
+    }
+
+    .overview-content,
+    .overview-visual {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    .overview-grid {
+        gap: 2.5rem !important;
+    }
+
+    .about-video-frame {
+        height: 450px !important;
     }
 }
 
@@ -1286,6 +1314,97 @@ section {
 
     .footer-bottom a {
         margin: 0 0.5rem;
+    }
+
+    .about-video-card {
+        padding: 1.25rem !important;
+    }
+
+    .about-video-frame {
+        height: 320px !important;
+    }
+
+    .hero-form-container {
+        padding: 1.75rem !important;
+    }
+
+    .perf-highlight-card {
+        padding: 2rem 1.25rem !important;
+    }
+
+    .perf-highlight-number {
+        font-size: 2.75rem !important;
+    }
+
+    .perf-metric-card {
+        padding: 1.5rem 1.25rem !important;
+    }
+
+    .perf-metric-number {
+        font-size: 1.6rem !important;
+        word-break: break-word;
+    }
+
+    .perf-badge {
+        font-size: 0.75rem !important;
+        padding: 0.35rem 0.75rem !important;
+        white-space: normal !important;
+        text-align: center;
+        max-width: 90%;
+        justify-content: center;
+    }
+
+    .modal-content {
+        padding: 1.75rem !important;
+    }
+
+    .perf-section-title {
+        font-size: 1.7rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .perf-section-title {
+        font-size: 1.4rem !important;
+    }
+
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
+
+    .hero-badge {
+        font-size: 0.8rem;
+    }
+
+    .about-video-frame {
+        height: 240px !important;
+    }
+
+    .perf-highlight-number {
+        font-size: 2.1rem !important;
+    }
+
+    .perf-metric-number {
+        font-size: 1.35rem !important;
+    }
+
+    .perf-badge {
+        font-size: 0.65rem !important;
+        gap: 4px !important;
+    }
+
+    .logo img {
+        height: 42px;
+        max-width: 110px;
+    }
+
+    .header-cta .btn {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
     }
 }
 
@@ -1334,43 +1453,4 @@ section {
     margin-bottom: 0.5rem;
     list-style-type: disc;
 }
-
-/ *   1 9 .   D y n a m i c   S e c t i o n s   * / 
- . m e d i a - g r i d   { 
-         d i s p l a y :   g r i d ; 
-         g r i d - t e m p l a t e - c o l u m n s :   r e p e a t ( a u t o - f i l l ,   m i n m a x ( 3 0 0 p x ,   1 f r ) ) ; 
-         g a p :   1 . 5 r e m ; 
-         m a r g i n - t o p :   1 . 5 r e m ; 
- } 
- 
- . m e d i a - c a r d   { 
-         b a c k g r o u n d :   # f f f ; 
-         b o r d e r - r a d i u s :   v a r ( - - b o r d e r - r a d i u s ) ; 
-         o v e r f l o w :   h i d d e n ; 
-         b o x - s h a d o w :   v a r ( - - s h a d o w - s m ) ; 
-         b o r d e r :   1 p x   s o l i d   v a r ( - - b o r d e r - c o l o r ) ; 
-         t r a n s i t i o n :   v a r ( - - t r a n s i t i o n ) ; 
- } 
- 
- . m e d i a - c a r d : h o v e r   { 
-         b o x - s h a d o w :   v a r ( - - s h a d o w - m d ) ; 
-         t r a n s f o r m :   t r a n s l a t e Y ( - 3 p x ) ; 
- } 
- 
- . m e d i a - c a r d   . v i d e o - c o n t a i n e r   { 
-         p o s i t i o n :   r e l a t i v e ; 
-         p a d d i n g - b o t t o m :   5 6 . 2 5 % ;   / *   1 6 : 9   A s p e c t   R a t i o   * / 
-         h e i g h t :   0 ; 
-         o v e r f l o w :   h i d d e n ; 
- } 
- 
- . m e d i a - c a r d   . v i d e o - c o n t a i n e r   i f r a m e ,   
- . m e d i a - c a r d   . v i d e o - c o n t a i n e r   v i d e o   { 
-         p o s i t i o n :   a b s o l u t e ; 
-         t o p :   0 ; 
-         l e f t :   0 ; 
-         w i d t h :   1 0 0 % ; 
-         h e i g h t :   1 0 0 % ; 
- } 
-  
- 
+
