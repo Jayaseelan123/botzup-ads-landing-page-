@@ -21,6 +21,130 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Testimonial videos: auto-play the one centered in the slider, pause the rest.
+// Thumbnails/posters show until a video becomes centered; only one plays at a time.
+document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.testimonials-slider');
+    const wraps = Array.from(document.querySelectorAll('.testimonial-video-wrap'));
+    if (!slider || !wraps.length) return;
+
+    const CHECK_INTERVAL_MS = 150;
+    const CENTER_TOLERANCE_RATIO = 0.5; // must be within half a card-width of dead center
+
+    let activeWrap = null;
+    let rafId = null;
+    let lastCheck = 0;
+
+    function pauseWrap(wrap) {
+        const video = wrap.querySelector('video');
+        if (!video) return;
+        video.pause();
+        video.currentTime = 0;
+        video.controls = false;
+        wrap.classList.remove('is-playing');
+    }
+
+    function playWrap(wrap) {
+        const video = wrap.querySelector('video');
+        if (!video) return;
+        video.muted = true;
+        video.setAttribute('muted', '');
+        video.controls = false;
+        wrap.classList.add('is-playing');
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+                // Playback was blocked; fall back to showing the thumbnail
+                wrap.classList.remove('is-playing');
+                if (activeWrap === wrap) activeWrap = null;
+            });
+        }
+    }
+
+    // Finds the testimonial card whose horizontal center is closest to the
+    // slider's own center, within a tolerance — this is the "centered" video.
+    function findCentered() {
+        const sliderRect = slider.getBoundingClientRect();
+        const sliderCenter = sliderRect.left + sliderRect.width / 2;
+
+        let best = null;
+        let bestDist = Infinity;
+
+        wraps.forEach(wrap => {
+            const rect = wrap.getBoundingClientRect();
+            if (rect.width === 0 || rect.right < sliderRect.left || rect.left > sliderRect.right) return;
+            const cardCenter = rect.left + rect.width / 2;
+            const dist = Math.abs(cardCenter - sliderCenter);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = { wrap, rect };
+            }
+        });
+
+        if (!best || bestDist > best.rect.width * CENTER_TOLERANCE_RATIO) return null;
+        return best.wrap;
+    }
+
+    function tick(timestamp) {
+        if (timestamp - lastCheck >= CHECK_INTERVAL_MS) {
+            lastCheck = timestamp;
+            const centered = findCentered();
+            if (centered !== activeWrap) {
+                if (activeWrap) pauseWrap(activeWrap);
+                if (centered) playWrap(centered);
+                activeWrap = centered;
+            }
+        }
+        rafId = requestAnimationFrame(tick);
+    }
+
+    function startLoop() {
+        if (rafId !== null) return;
+        lastCheck = 0;
+        rafId = requestAnimationFrame(tick);
+    }
+
+    function stopLoop() {
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+        if (activeWrap) {
+            pauseWrap(activeWrap);
+            activeWrap = null;
+        }
+    }
+
+    // Only run the center-check loop while the section is actually on screen,
+    // and pause everything when the browser tab itself is hidden.
+    const section = document.getElementById('testimonials');
+    if (section && 'IntersectionObserver' in window) {
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    startLoop();
+                } else {
+                    stopLoop();
+                }
+            });
+        }, { threshold: 0.1 });
+        sectionObserver.observe(section);
+    } else {
+        startLoop();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopLoop();
+        } else if (section) {
+            const rect = section.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                startLoop();
+            }
+        }
+    });
+});
+
 // CTA Behavior
 function handleCTA(action) {
     const modal = document.getElementById('cta-modal');
