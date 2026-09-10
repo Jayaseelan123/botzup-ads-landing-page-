@@ -21,130 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Testimonial videos: auto-play the one centered in the slider, pause the rest.
-// Thumbnails/posters show until a video becomes centered; only one plays at a time.
-document.addEventListener('DOMContentLoaded', () => {
-    const slider = document.querySelector('.testimonials-slider');
-    const wraps = Array.from(document.querySelectorAll('.testimonial-video-wrap'));
-    if (!slider || !wraps.length) return;
-
-    const CHECK_INTERVAL_MS = 150;
-    const CENTER_TOLERANCE_RATIO = 0.5; // must be within half a card-width of dead center
-
-    let activeWrap = null;
-    let rafId = null;
-    let lastCheck = 0;
-
-    function pauseWrap(wrap) {
-        const video = wrap.querySelector('video');
-        if (!video) return;
-        video.pause();
-        video.currentTime = 0;
-        video.controls = false;
-        wrap.classList.remove('is-playing');
-    }
-
-    function playWrap(wrap) {
-        const video = wrap.querySelector('video');
-        if (!video) return;
-        video.muted = true;
-        video.setAttribute('muted', '');
-        video.controls = false;
-        wrap.classList.add('is-playing');
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(() => {
-                // Playback was blocked; fall back to showing the thumbnail
-                wrap.classList.remove('is-playing');
-                if (activeWrap === wrap) activeWrap = null;
-            });
-        }
-    }
-
-    // Finds the testimonial card whose horizontal center is closest to the
-    // slider's own center, within a tolerance — this is the "centered" video.
-    function findCentered() {
-        const sliderRect = slider.getBoundingClientRect();
-        const sliderCenter = sliderRect.left + sliderRect.width / 2;
-
-        let best = null;
-        let bestDist = Infinity;
-
-        wraps.forEach(wrap => {
-            const rect = wrap.getBoundingClientRect();
-            if (rect.width === 0 || rect.right < sliderRect.left || rect.left > sliderRect.right) return;
-            const cardCenter = rect.left + rect.width / 2;
-            const dist = Math.abs(cardCenter - sliderCenter);
-            if (dist < bestDist) {
-                bestDist = dist;
-                best = { wrap, rect };
-            }
-        });
-
-        if (!best || bestDist > best.rect.width * CENTER_TOLERANCE_RATIO) return null;
-        return best.wrap;
-    }
-
-    function tick(timestamp) {
-        if (timestamp - lastCheck >= CHECK_INTERVAL_MS) {
-            lastCheck = timestamp;
-            const centered = findCentered();
-            if (centered !== activeWrap) {
-                if (activeWrap) pauseWrap(activeWrap);
-                if (centered) playWrap(centered);
-                activeWrap = centered;
-            }
-        }
-        rafId = requestAnimationFrame(tick);
-    }
-
-    function startLoop() {
-        if (rafId !== null) return;
-        lastCheck = 0;
-        rafId = requestAnimationFrame(tick);
-    }
-
-    function stopLoop() {
-        if (rafId !== null) {
-            cancelAnimationFrame(rafId);
-            rafId = null;
-        }
-        if (activeWrap) {
-            pauseWrap(activeWrap);
-            activeWrap = null;
-        }
-    }
-
-    // Only run the center-check loop while the section is actually on screen,
-    // and pause everything when the browser tab itself is hidden.
-    const section = document.getElementById('testimonials');
-    if (section && 'IntersectionObserver' in window) {
-        const sectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    startLoop();
-                } else {
-                    stopLoop();
-                }
-            });
-        }, { threshold: 0.1 });
-        sectionObserver.observe(section);
-    } else {
-        startLoop();
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopLoop();
-        } else if (section) {
-            const rect = section.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                startLoop();
-            }
-        }
-    });
-});
-
 // CTA Behavior
 function handleCTA(action) {
     const modal = document.getElementById('cta-modal');
@@ -206,8 +82,68 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (sheetKey === 'Name') dataObj.name = inputElement.value;
                     else if (sheetKey === 'Email') dataObj.email = inputElement.value;
                     else if (sheetKey === 'WhatsApp_Number') dataObj.phone = inputElement.value;
-                    else if (sheetKey === 'Message') dataObj.message = inputElement.value;
                 }
+            }
+
+            // Clear any existing status messages
+            const existingSuccess = form.querySelector('.submit-success-msg');
+            if (existingSuccess) existingSuccess.remove();
+            const existingError = form.querySelector('.submit-error-msg');
+            if (existingError) existingError.remove();
+
+            // Sends the WhatsApp notification webhook. Called ONLY after the form
+            // submission itself has been saved successfully (see the Sheet .then()
+            // below) — never here, and never more than once per submit.
+            function triggerWhatsAppWebhook() {
+                // Botzup Event Notification Webhook URL & Tokens (Environment Specific)
+                // NOTE: there is no local backend on port 3502 — local/dev testing
+                // (localhost, 127.0.0.1, or any "stg"/"stage" hostname) uses the
+                // confirmed-working staging endpoint instead. Update apiBaseUrl/webhookToken
+                // in the "else" branch below once the real production webhook token is issued.
+                let apiBaseUrl = 'https://api.botzup.net';
+                let webhookToken = 'uxlwquy41gim51g2dpewmpmttywulr'; // Production token — replace once confirmed working
+
+                if (
+                    window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.hostname.includes('stg') ||
+                    window.location.hostname.includes('stage')
+                ) {
+                    apiBaseUrl = 'https://api.stg.botzup.net';
+                    webhookToken = 'e60i48uvv4gu3v3jre2y2mtu59nzk'; // Stage Token — confirmed working
+                }
+
+                const botzupWebhookURL = `${apiBaseUrl}/api/ecommerce-webhook/trigger/${webhookToken}`;
+
+                let cleanPhone = dataObj.phone ? dataObj.phone.replace(/[^0-9]/g, '') : '';
+                if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+                if (!cleanPhone) return; // No usable WhatsApp number was submitted — nothing to send
+
+                fetch(botzupWebhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: dataObj.name,
+                        email: dataObj.email,
+                        phone: cleanPhone,
+                        whatsapp_number: cleanPhone,
+                        customer: {
+                            name: dataObj.name,
+                            email: dataObj.email,
+                            phone: cleanPhone
+                        }
+                    })
+                })
+                    .then(async (res) => {
+                        const data = await res.json().catch(() => null);
+                        if (!res.ok || !data || data.success !== true) {
+                            throw new Error((data && (data.error || data.message)) || `HTTP ${res.status}`);
+                        }
+                        console.log('Botzup WhatsApp notification sent:', data);
+                    })
+                    // WhatsApp failures are logged only — they never affect the form's
+                    // own success/error UI, per the "handle WhatsApp error separately" requirement.
+                    .catch(err => console.error('Botzup Webhook Error (non-blocking):', err.message || err));
             }
 
             fetch(scriptURL, {
@@ -217,29 +153,41 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then(response => {
                     // With no-cors, the response is opaque, so we assume success if no network error occurred
-                    let msgDiv = form.querySelector('.success-message');
-                    if (!msgDiv) {
-                        msgDiv = document.createElement('div');
-                        msgDiv.className = 'success-message';
-                        msgDiv.style.color = 'green';
-                        msgDiv.style.marginTop = '15px';
-                        msgDiv.style.fontWeight = 'bold';
-                        msgDiv.style.textAlign = 'center';
-                        form.appendChild(msgDiv);
-                    }
-                    msgDiv.textContent = 'thankyou contact us';
-                    
+                    const successMsg = document.createElement('p');
+                    successMsg.className = 'submit-success-msg';
+                    successMsg.style.color = '#0f8863'; // Teal green matching the theme
+                    successMsg.style.textAlign = 'center';
+                    successMsg.style.marginTop = '15px';
+                    successMsg.style.fontWeight = '600';
+                    successMsg.style.fontSize = '14px';
+                    successMsg.innerText = 'Thank you! Contact us.';
+
+                    submitBtn.parentNode.insertBefore(successMsg, submitBtn.nextSibling);
                     form.reset();
+
+                    // Form submission succeeded — now, and only now, trigger the WhatsApp message.
+                    triggerWhatsAppWebhook();
+
+                    // If it is the modal form, close the modal after 2 seconds
                     if (modal && form.id === 'modal-form') {
                         setTimeout(() => {
                             modal.style.display = 'none';
-                            msgDiv.remove();
-                        }, 3000);
+                            successMsg.remove();
+                        }, 2000);
                     }
                 })
                 .catch(error => {
                     console.error('Google Sheet Submission Error!', error.message);
-                    alert('There was an error submitting your information. Please try again.');
+                    const errorMsg = document.createElement('p');
+                    errorMsg.className = 'submit-error-msg';
+                    errorMsg.style.color = '#e11d48'; // Red for errors
+                    errorMsg.style.textAlign = 'center';
+                    errorMsg.style.marginTop = '15px';
+                    errorMsg.style.fontWeight = '600';
+                    errorMsg.style.fontSize = '14px';
+                    errorMsg.innerText = 'There was an error submitting your information. Please try again.';
+
+                    submitBtn.parentNode.insertBefore(errorMsg, submitBtn.nextSibling);
                 })
                 .finally(() => {
                     submitBtn.innerText = originalText;
@@ -264,17 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         handleFormSubmit(modalForm, {
             'Name': 'modal-name',
             'WhatsApp_Number': 'modal-phone'
-        });
-    }
-
-    // Bind Contact Form
-    const contactForm = document.getElementById('contact-form');
-    if (contactForm) {
-        handleFormSubmit(contactForm, {
-            'Name': 'contact-name',
-            'Email': 'contact-email',
-            'WhatsApp_Number': 'contact-phone',
-            'Message': 'contact-message'
         });
     }
 });
