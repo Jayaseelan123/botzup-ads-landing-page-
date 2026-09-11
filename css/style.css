@@ -849,8 +849,8 @@ section {
     flex-shrink: 0;
 }
 
-/* Testimonial video thumbnail: shows a poster + play icon until the card is
-   centered in the slider, at which point script.js auto-plays it (muted). */
+/* Testimonial video thumbnail: shows a poster + play icon. The video stays
+   paused and muted until the visitor manually clicks the play button. */
 .testimonial-video-wrap {
     position: relative;
 }
@@ -874,7 +874,7 @@ section {
     align-items: center;
     justify-content: center;
     font-size: 1.4rem;
-    pointer-events: none;
+    cursor: pointer;
     box-shadow: var(--shadow-md);
     transition: var(--transition);
 }

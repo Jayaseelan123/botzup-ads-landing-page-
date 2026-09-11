@@ -1,3 +1,34 @@
+// Testimonial Videos: stay paused/muted by default, only play on manual click
+document.addEventListener('DOMContentLoaded', () => {
+    const videoWraps = document.querySelectorAll('.testimonial-video-wrap');
+
+    videoWraps.forEach(wrap => {
+        const video = wrap.querySelector('.testimonial-video');
+        const playBtn = wrap.querySelector('.testimonial-play-btn');
+        if (!video || !playBtn) return;
+
+        playBtn.addEventListener('click', () => {
+            // Only one testimonial video plays at a time
+            videoWraps.forEach(otherWrap => {
+                if (otherWrap === wrap) return;
+                const otherVideo = otherWrap.querySelector('.testimonial-video');
+                if (otherVideo && !otherVideo.paused) {
+                    otherVideo.pause();
+                    otherWrap.classList.remove('is-playing');
+                }
+            });
+
+            video.muted = true; // audio must stay muted even after a manual play
+            video.play();
+            wrap.classList.add('is-playing');
+        });
+
+        video.addEventListener('ended', () => {
+            wrap.classList.remove('is-playing');
+        });
+    });
+});
+
 // FAQ Accordion
 document.addEventListener('DOMContentLoaded', () => {
     const faqItems = document.querySelectorAll('.faq-item');
