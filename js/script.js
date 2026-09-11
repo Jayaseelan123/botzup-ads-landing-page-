@@ -139,14 +139,62 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollTimeout = setTimeout(updateCenterVideo, 50); 
     }
 
+    // Auto-scroll logic to automatically advance videos one by one
+    let autoScrollInterval;
+    const AUTO_SCROLL_DELAY = 3500; // Auto-scroll every 3.5 seconds
+
+    function startAutoScroll() {
+        stopAutoScroll();
+        autoScrollInterval = setInterval(() => {
+            const viewportCenterX = window.innerWidth / 2;
+            let closestCard = null;
+            let minDistance = Infinity;
+
+            const currentCards = track.querySelectorAll('.testimonial-card');
+            currentCards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const cardCenterX = rect.left + rect.width / 2;
+                const distance = Math.abs(viewportCenterX - cardCenterX);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCard = card;
+                }
+            });
+
+            if (closestCard) {
+                const nextCard = closestCard.nextElementSibling;
+                if (nextCard) {
+                    const scrollLeft = nextCard.offsetLeft - (slider.clientWidth / 2) + (nextCard.clientWidth / 2);
+                    slider.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                }
+            }
+        }, AUTO_SCROLL_DELAY);
+    }
+
+    function stopAutoScroll() {
+        if (autoScrollInterval) clearInterval(autoScrollInterval);
+    }
+
+    let interactionTimeout;
+    
     // Listen to horizontal scroll events on the slider
-    slider.addEventListener('scroll', handleScrollDebounced);
+    slider.addEventListener('scroll', () => {
+        handleScrollDebounced();
+        // Temporarily pause auto-scroll during manual user interaction
+        stopAutoScroll();
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(startAutoScroll, 4000); // Resume auto-scroll after 4s of inactivity
+    });
 
     // Listen to vertical scroll events on the entire window
     window.addEventListener('scroll', handleScrollDebounced);
 
-    // Initial check on load
-    setTimeout(updateCenterVideo, 100);
+    // Initial check on load and start auto-scroll
+    setTimeout(() => {
+        updateCenterVideo();
+        startAutoScroll();
+    }, 100);
 });
 
 // FAQ Accordion
