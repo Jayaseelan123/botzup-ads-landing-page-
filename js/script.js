@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Grab the first 4 cards to use as templates for infinite cloning
     let originalCards = Array.from(track.querySelectorAll('.testimonial-card')).slice(0, 4);
-    let isSliderVisible = false;
     
     // Initialize video behaviors
     function initVideo(card) {
@@ -58,24 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let scrollTimeout;
     
     function updateCenterVideo() {
-        if (!isSliderVisible) {
-            // Pause all if slider is not in the viewport
-            track.querySelectorAll('.testimonial-video').forEach(v => {
-                if (!v.paused) v.pause();
-            });
-            return;
-        }
-
-        const sliderCenter = slider.scrollLeft + (slider.clientWidth / 2);
+        const viewportCenterX = window.innerWidth / 2;
+        
         let closestCard = null;
         let minDistance = Infinity;
 
         const currentCards = track.querySelectorAll('.testimonial-card');
 
-        // Find the card closest to the center of the slider wrapper
+        // Find the card closest to the horizontal center of the viewport
         currentCards.forEach(card => {
-            const cardCenter = card.offsetLeft + (card.clientWidth / 2);
-            const distance = Math.abs(sliderCenter - cardCenter);
+            const rect = card.getBoundingClientRect();
+            const cardCenterX = rect.left + rect.width / 2;
+            const distance = Math.abs(viewportCenterX - cardCenterX);
             
             if (distance < minDistance) {
                 minDistance = distance;
@@ -83,11 +76,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Determine if closest card is "sufficiently centered" horizontally and vertically
+        let isSufficientlyCentered = false;
+        if (closestCard) {
+            const rect = closestCard.getBoundingClientRect();
+            const cardCenterX = rect.left + rect.width / 2;
+            const distanceX = Math.abs(viewportCenterX - cardCenterX);
+            
+            // Check vertical visibility: ensure the card is largely visible in the viewport
+            const isVerticallyVisible = (rect.top < window.innerHeight * 0.8) && (rect.bottom > window.innerHeight * 0.2);
+            
+            // It must be the dominant card horizontally and well visible vertically
+            if (distanceX < (rect.width / 2) && isVerticallyVisible) {
+                isSufficientlyCentered = true;
+            }
+        }
+
         currentCards.forEach(card => {
             const video = card.querySelector('.testimonial-video');
             if (!video) return;
             
-            if (card === closestCard) {
+            if (card === closestCard && isSufficientlyCentered) {
                 // This is the center card. Play it.
                 if (video.paused) {
                     video.play().catch(err => {
@@ -100,10 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.classList.add('is-playing');
                 }
             } else {
-                // Not the center card. Pause it and reset.
+                // Not the center card. Immediately pause it.
                 if (!video.paused) {
                     video.pause();
-                    video.currentTime = 0;
                     card.classList.remove('is-playing');
                 }
             }
@@ -125,21 +133,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Listen to scroll events to update which video is playing
-    slider.addEventListener('scroll', () => {
+    function handleScrollDebounced() {
         clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(updateCenterVideo, 50); // Small debounce to avoid jank
-    });
+        // Small debounce to avoid jank while scrolling, but responsive enough for "immediate" pause
+        scrollTimeout = setTimeout(updateCenterVideo, 50); 
+    }
 
-    // Observe when the slider section is actually on-screen
-    const visibilityObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            isSliderVisible = entry.isIntersecting;
-            updateCenterVideo();
-        });
-    }, { threshold: 0.3 }); // Triggers when 30% of the slider is visible
+    // Listen to horizontal scroll events on the slider
+    slider.addEventListener('scroll', handleScrollDebounced);
 
-    visibilityObserver.observe(slider);
+    // Listen to vertical scroll events on the entire window
+    window.addEventListener('scroll', handleScrollDebounced);
+
+    // Initial check on load
+    setTimeout(updateCenterVideo, 100);
 });
 
 // FAQ Accordion
