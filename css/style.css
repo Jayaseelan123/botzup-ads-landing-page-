@@ -813,32 +813,26 @@ section {
 .testimonials-slider {
     position: relative;
     width: 100%;
-    overflow: hidden;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     padding: 1rem 0;
+    /* Hide scrollbars */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+.testimonials-slider::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .testimonials-slide-track {
     display: flex;
     gap: 2rem;
     width: max-content;
-    animation: scroll-testimonials 40s linear infinite;
+    padding: 0 calc(50vw - 160px); /* 160px is half the 320px card width */
 }
 
-.testimonials-slide-track:hover {
-    animation-play-state: paused;
-}
-
-@keyframes scroll-testimonials {
-    0% {
-        transform: translateX(0);
-    }
-
-    100% {
-        transform: translateX(calc(-50% - 1rem));
-    }
-
-    /* Scrolls exactly half the track length (the 5 original items + their gap) */
-}
+/* We don't need the animation anymore */
 
 .testimonial-card {
     background: white;
@@ -847,6 +841,7 @@ section {
     box-shadow: var(--shadow-sm);
     width: 400px;
     flex-shrink: 0;
+    scroll-snap-align: center;
 }
 
 /* Testimonial video thumbnail: shows a poster + play icon. The video stays

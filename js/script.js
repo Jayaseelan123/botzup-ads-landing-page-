@@ -1,47 +1,145 @@
-// Testimonial Videos: stay paused/muted by default, only play on manual click
+// Global safeguard: Ensure absolutely no video autoplays on load, except for testimonials which are handled by IntersectionObserver
 document.addEventListener('DOMContentLoaded', () => {
-    const videoWraps = document.querySelectorAll('.testimonial-video-wrap');
+    document.querySelectorAll('video').forEach(vid => {
+        if (!vid.classList.contains('testimonial-video')) {
+            vid.autoplay = false;
+            vid.pause();
+        }
+    });
+});
 
-    videoWraps.forEach(wrap => {
-        const video = wrap.querySelector('.testimonial-video');
-        const playBtn = wrap.querySelector('.testimonial-play-btn');
-        if (!video || !playBtn) return;
+// Testimonial Videos: center-focused auto-play and scroll-snapping
+document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.testimonials-slider');
+    const track = document.querySelector('.testimonials-slide-track');
+    if (!slider || !track) return;
 
-        // Explicitly ensure video is paused, muted, and autoplay is disabled on load
-        video.pause();
-        video.muted = true;
-        video.volume = 0;
-        video.autoplay = false;
+    // Grab the first 4 cards to use as templates for infinite cloning
+    let originalCards = Array.from(track.querySelectorAll('.testimonial-card')).slice(0, 4);
+    let isSliderVisible = false;
+    
+    // Initialize video behaviors
+    function initVideo(card) {
+        const video = card.querySelector('.testimonial-video');
+        const playBtn = card.querySelector('.testimonial-play-btn');
+        if (!video) return;
+        
+        video.muted = false;
+        video.volume = 1;
+        video.loop = false; // We need to detect when it ends to auto-scroll
+        
+        // Hide play button since it autoplays automatically
+        if (playBtn) playBtn.style.display = 'none';
 
-        playBtn.addEventListener('click', () => {
-            // Only one testimonial video plays at a time
-            videoWraps.forEach(otherWrap => {
-                if (otherWrap === wrap) return;
-                const otherVideo = otherWrap.querySelector('.testimonial-video');
-                if (otherVideo && !otherVideo.paused) {
-                    otherVideo.pause();
-                    otherWrap.classList.remove('is-playing');
-                }
-            });
-
-            video.muted = true; // audio must stay muted even after a manual play
-            video.volume = 0;   // extra safeguard against audio
-            video.play();
-            wrap.classList.add('is-playing');
+        // When the video finishes, smoothly scroll to the next card
+        video.addEventListener('ended', () => {
+            const nextCard = card.nextElementSibling;
+            if (nextCard) {
+                const scrollLeft = nextCard.offsetLeft - (slider.clientWidth / 2) + (nextCard.clientWidth / 2);
+                slider.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
         });
-
-        // Allow pausing the video by clicking on it once it's playing
+        
+        // Add a click listener to toggle mute/play manually
         video.addEventListener('click', () => {
-            if (!video.paused) {
-                video.pause();
-                wrap.classList.remove('is-playing');
+            if (video.muted) {
+                video.muted = false;
+                video.volume = 1;
+            } else {
+                if (!video.paused) video.pause();
+                else video.play();
+            }
+        });
+    }
+
+    // Initialize all currently existing cards in the DOM
+    track.querySelectorAll('.testimonial-card').forEach(initVideo);
+
+    let scrollTimeout;
+    
+    function updateCenterVideo() {
+        if (!isSliderVisible) {
+            // Pause all if slider is not in the viewport
+            track.querySelectorAll('.testimonial-video').forEach(v => {
+                if (!v.paused) v.pause();
+            });
+            return;
+        }
+
+        const sliderCenter = slider.scrollLeft + (slider.clientWidth / 2);
+        let closestCard = null;
+        let minDistance = Infinity;
+
+        const currentCards = track.querySelectorAll('.testimonial-card');
+
+        // Find the card closest to the center of the slider wrapper
+        currentCards.forEach(card => {
+            const cardCenter = card.offsetLeft + (card.clientWidth / 2);
+            const distance = Math.abs(sliderCenter - cardCenter);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCard = card;
             }
         });
 
-        video.addEventListener('ended', () => {
-            wrap.classList.remove('is-playing');
+        currentCards.forEach(card => {
+            const video = card.querySelector('.testimonial-video');
+            if (!video) return;
+            
+            if (card === closestCard) {
+                // This is the center card. Play it.
+                if (video.paused) {
+                    video.play().catch(err => {
+                        console.log('Autoplay with sound prevented by browser:', err);
+                        // Fallback to muted if strict autoplay policies block sound
+                        video.muted = true;
+                        video.volume = 0;
+                        video.play().catch(e => console.log('Autoplay totally prevented:', e));
+                    });
+                    card.classList.add('is-playing');
+                }
+            } else {
+                // Not the center card. Pause it and reset.
+                if (!video.paused) {
+                    video.pause();
+                    video.currentTime = 0;
+                    card.classList.remove('is-playing');
+                }
+            }
         });
+        
+        // Infinite cloning logic: if we scroll near the end, append more cards
+        if (slider.scrollLeft + slider.clientWidth >= track.scrollWidth - 300) {
+            originalCards.forEach(orig => {
+                const clone = orig.cloneNode(true);
+                clone.classList.remove('is-playing');
+                const v = clone.querySelector('.testimonial-video');
+                if (v) {
+                    v.pause();
+                    v.currentTime = 0;
+                }
+                initVideo(clone);
+                track.appendChild(clone);
+            });
+        }
+    }
+
+    // Listen to scroll events to update which video is playing
+    slider.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(updateCenterVideo, 50); // Small debounce to avoid jank
     });
+
+    // Observe when the slider section is actually on-screen
+    const visibilityObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isSliderVisible = entry.isIntersecting;
+            updateCenterVideo();
+        });
+    }, { threshold: 0.3 }); // Triggers when 30% of the slider is visible
+
+    visibilityObserver.observe(slider);
 });
 
 // FAQ Accordion
