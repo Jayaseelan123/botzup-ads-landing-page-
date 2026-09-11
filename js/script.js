@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const playBtn = wrap.querySelector('.testimonial-play-btn');
         if (!video || !playBtn) return;
 
+        // Explicitly ensure video is paused, muted, and autoplay is disabled on load
+        video.pause();
+        video.muted = true;
+        video.volume = 0;
+        video.autoplay = false;
+
         playBtn.addEventListener('click', () => {
             // Only one testimonial video plays at a time
             videoWraps.forEach(otherWrap => {
@@ -19,8 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             video.muted = true; // audio must stay muted even after a manual play
+            video.volume = 0;   // extra safeguard against audio
             video.play();
             wrap.classList.add('is-playing');
+        });
+
+        // Allow pausing the video by clicking on it once it's playing
+        video.addEventListener('click', () => {
+            if (!video.paused) {
+                video.pause();
+                wrap.classList.remove('is-playing');
+            }
         });
 
         video.addEventListener('ended', () => {
