@@ -8,6 +8,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Setup YouTube Iframe API
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+const ytPlayers = new Map();
+
+window.onYouTubeIframeAPIReady = function() {
+    document.querySelectorAll('.testimonial-video').forEach(video => {
+        if (video.tagName.toLowerCase() === 'iframe') {
+            initYTPlayer(video);
+        }
+    });
+};
+
+function initYTPlayer(iframe) {
+    if (ytPlayers.has(iframe)) return;
+    const player = new YT.Player(iframe, {
+        events: {
+            // Player state tracking if needed, removed ENDED override to enforce strict 10-second intervals
+        }
+    });
+    ytPlayers.set(iframe, player);
+}
+
 // Testimonial Videos: center-focused auto-play and scroll-snapping
 document.addEventListener('DOMContentLoaded', () => {
     const slider = document.querySelector('.testimonials-slider');
@@ -22,6 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const video = card.querySelector('.testimonial-video');
         const playBtn = card.querySelector('.testimonial-play-btn');
         if (!video) return;
+        
+        if (video.tagName.toLowerCase() === 'iframe') {
+            if (playBtn) playBtn.style.display = 'none';
+            if (window.YT && window.YT.Player) {
+                initYTPlayer(video);
+            }
+            return;
+        }
         
         video.muted = false;
         video.volume = 1;
@@ -105,36 +139,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            const isIframe = video.tagName.toLowerCase() === 'iframe';
+            
             if (card === closestCard && isSufficientlyCentered) {
-                // This is the center card. Play it.
-                if (video.paused) {
-                    video.play().catch(err => {
-                        console.log('Autoplay with sound prevented by browser:', err);
-                        // Fallback to muted if strict autoplay policies block sound
-                        video.muted = true;
-                        video.volume = 0;
-                        video.play().catch(e => console.log('Autoplay totally prevented:', e));
-                    });
+                // This is the center card. Play it from start.
+                if (!card.classList.contains('is-playing')) {
+                    if (isIframe) {
+                        const player = ytPlayers.get(video);
+                        if (player && typeof player.playVideo === 'function') {
+                            player.seekTo(0);
+                            player.playVideo();
+                        } else {
+                            video.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
+                            video.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                        }
+                    } else {
+                        video.currentTime = 0;
+                        video.play().catch(err => {
+                            console.log('Autoplay with sound prevented by browser:', err);
+                            video.muted = true;
+                            video.volume = 0;
+                            video.play().catch(e => console.log('Autoplay totally prevented:', e));
+                        });
+                    }
                     card.classList.add('is-playing');
                 }
             } else {
                 // Not the center card. Immediately pause it.
-                if (!video.paused) {
-                    video.pause();
+                if (card.classList.contains('is-playing')) {
+                    if (isIframe) {
+                        const player = ytPlayers.get(video);
+                        if (player && typeof player.pauseVideo === 'function') {
+                            player.pauseVideo();
+                        } else {
+                            video.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                        }
+                    } else {
+                        if (!video.paused) {
+                            video.pause();
+                        }
+                    }
                     card.classList.remove('is-playing');
                 }
             }
         });
         
         // Infinite cloning logic: if we scroll near the end, append more cards
-        if (slider.scrollLeft + slider.clientWidth >= track.scrollWidth - 300) {
+        if (slider.scrollLeft + slider.clientWidth >= track.scrollWidth - 1500) {
             originalCards.forEach(orig => {
                 const clone = orig.cloneNode(true);
                 clone.classList.remove('is-playing');
                 const v = clone.querySelector('.testimonial-video');
                 if (v) {
-                    v.pause();
-                    v.currentTime = 0;
+                    if (v.tagName.toLowerCase() === 'iframe') {
+                        v.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    } else {
+                        v.pause();
+                        v.currentTime = 0;
+                    }
                 }
                 initVideo(clone);
                 track.appendChild(clone);
@@ -148,9 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollTimeout = setTimeout(updateCenterVideo, 50); 
     }
 
-    // Auto-scroll logic to automatically advance videos one by one
+    // Auto-scroll logic to automatically advance videos one by one exactly every 5 seconds
     let autoScrollInterval;
-    const AUTO_SCROLL_DELAY = 3000; // Auto-scroll every 3 seconds
+    const AUTO_SCROLL_DELAY = 5000; // Exactly 5 seconds playback requirement
+    let isAutoScrolling = false;
 
     function startAutoScroll() {
         stopAutoScroll();
@@ -172,10 +235,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (closestCard) {
+                // EXPLICITLY STOP VIDEO BEFORE SCROLLING to match exact requirements
+                const video = closestCard.querySelector('.testimonial-video');
+                if (video && closestCard.classList.contains('is-playing')) {
+                    if (video.tagName.toLowerCase() === 'iframe') {
+                        const player = ytPlayers.get(video);
+                        if (player && typeof player.pauseVideo === 'function') {
+                            player.pauseVideo();
+                        } else {
+                            video.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                        }
+                    } else {
+                        video.pause();
+                    }
+                    closestCard.classList.remove('is-playing');
+                }
+
                 const nextCard = closestCard.nextElementSibling;
                 if (nextCard) {
+                    isAutoScrolling = true;
                     const scrollLeft = nextCard.offsetLeft - (slider.clientWidth / 2) + (nextCard.clientWidth / 2);
                     slider.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                    // Clear the programmatic flag after smooth scroll is complete
+                    setTimeout(() => { isAutoScrolling = false; }, 800);
                 }
             }
         }, AUTO_SCROLL_DELAY);
@@ -190,10 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen to horizontal scroll events on the slider
     slider.addEventListener('scroll', () => {
         handleScrollDebounced();
-        // Temporarily pause auto-scroll during manual user interaction
-        stopAutoScroll();
-        clearTimeout(interactionTimeout);
-        interactionTimeout = setTimeout(startAutoScroll, 4000); // Resume auto-scroll after 4s of inactivity
+        if (!isAutoScrolling) {
+            // Temporarily pause auto-scroll during manual user interaction
+            stopAutoScroll();
+            clearTimeout(interactionTimeout);
+            interactionTimeout = setTimeout(startAutoScroll, 5000); // Resume auto-scroll after 5s of inactivity
+        }
     });
 
     // Listen to vertical scroll events on the entire window

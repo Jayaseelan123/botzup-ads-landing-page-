@@ -829,7 +829,8 @@ section {
     display: flex;
     gap: 2rem;
     width: max-content;
-    padding: 0 calc(50vw - 160px); /* 160px is half the 320px card width */
+    /* Dynamically center: 50vw minus half the card width (which is min(40vw, 200px)) */
+    padding: 0 calc(50vw - min(40vw, 200px)); 
 }
 
 /* We don't need the animation anymore */
@@ -839,7 +840,8 @@ section {
     padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
-    width: 400px;
+    width: 80vw;
+    max-width: 400px;
     flex-shrink: 0;
     scroll-snap-align: center;
 }
