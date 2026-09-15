@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const track = document.querySelector('.testimonials-slide-track');
     if (!slider || !track) return;
 
-    // Grab the first 4 cards to use as templates for infinite cloning
-    let originalCards = Array.from(track.querySelectorAll('.testimonial-card')).slice(0, 4);
+    // Grab all initial cards to use as templates for infinite cloning
+    let originalCards = Array.from(track.querySelectorAll('.testimonial-card'));
     
     // Initialize video behaviors
     function initVideo(card) {
@@ -94,7 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentCards.forEach(card => {
             const video = card.querySelector('.testimonial-video');
-            if (!video) return;
+            
+            if (!video) {
+                // For iframes/other content, just toggle the class based on focus
+                if (card === closestCard && isSufficientlyCentered) {
+                    card.classList.add('is-playing');
+                } else {
+                    card.classList.remove('is-playing');
+                }
+                return;
+            }
             
             if (card === closestCard && isSufficientlyCentered) {
                 // This is the center card. Play it.
@@ -141,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-scroll logic to automatically advance videos one by one
     let autoScrollInterval;
-    const AUTO_SCROLL_DELAY = 3500; // Auto-scroll every 3.5 seconds
+    const AUTO_SCROLL_DELAY = 3000; // Auto-scroll every 3 seconds
 
     function startAutoScroll() {
         stopAutoScroll();
